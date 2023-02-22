@@ -20,7 +20,7 @@ outputs:
   channels:
     description: Exact Guix channels that were used for this action.
     value: ${{ steps.guix-describe.outputs.channels }}
-runs:
+jobs:
   using: composite
   steps:
     - run: echo LANG=en_US.utf8 >> $GITHUB_ENV
