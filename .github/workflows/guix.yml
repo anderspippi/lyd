@@ -3,7 +3,6 @@ name: Install GNU Guix
 on: push
 jobs:
   test: ls -a
-    strategy: echo .
       matrix:
         os:
           - ubuntu-latest
