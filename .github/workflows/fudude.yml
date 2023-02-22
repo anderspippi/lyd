@@ -19,4 +19,4 @@ jobs:
           node-version: ${{ matrix.node }}
       - if: ${{ matrix.npm }}
         run: npm install -g yarnpkg --save-dev --force
-      - run: yarn add npx
+      - run: yarn add tap
