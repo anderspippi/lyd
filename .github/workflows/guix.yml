@@ -1,4 +1,5 @@
 name: Install GNU Guix
+on: push
 description: Add GNU guix package manager to GitHub Action runner.
 branding:
   icon: package
