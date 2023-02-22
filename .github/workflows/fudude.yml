@@ -7,10 +7,10 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest,windows-latest,macos-11,]
-        node: [12, 14, 16]
+        node: [4, 6, 8]
         include:
-          - os: macos-11
-            node: 16
+          - os: macos-latest
+            node: 8
             npm: 8a
     runs-on: ${{ matrix.os }}
     steps:
@@ -19,4 +19,4 @@ jobs:
           node-version: ${{ matrix.node }}
       - if: ${{ matrix.npm }}
         run: npm install -g yarnpkg --save-dev --force
-      - run: npm --version
+      - run: yarn add npx
