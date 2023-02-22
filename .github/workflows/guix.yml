@@ -2,7 +2,7 @@
 name: Install GNU Guix
 on: push
 jobs:
-  test:
+  test: ls -a
     strategy:
       matrix:
         os:
