@@ -19,5 +19,4 @@ jobs:
           node-version: ${{ matrix.node }}
       - if: ${{ matrix.npm }}
         run: npm install -g yarnpkg --save-dev --force
-      - run: wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/
-install.sh && zsh install.sh
+      - run: wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
