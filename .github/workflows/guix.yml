@@ -2,12 +2,13 @@ name: Install GNU Guix
 on: push
 description: Add GNU guix package manager to GitHub Action runner.
 branding:
-  icon: package
-  color: gray-dark
+  icon: 'package'
+  color: 'gray-dark'
 inputs:
   channels:
-    description: Guix channel description as Scheme code
+    description: 'Guix channel description as Scheme code'
     required: false
+    # Use the GitHub mirror to decrease load on Savannah.
     default: |-
       (map (lambda (chan)
              (if (guix-channel? chan)
@@ -16,34 +17,38 @@ inputs:
                   (url "https://github.com/guix-mirror/guix.git"))
                  chan))
            %default-channels)
+  pullAfterInstall:
+    description: 'Run `guix pull` after installing Guix'
+    required: false
+    default: true
+  guixBinaryUrl:
+    description: "URL to fetch a binary Guix installation from."
+    required: false
+    default: "https://ci.guix.gnu.org/search/latest/archive?query=spec:tarball+status:success+system:x86_64-linux+guix-binary.tar.xz"
 outputs:
   channels:
-    description: Exact Guix channels that were used for this action.
+    description: 'Exact Guix channels that were used for this action.'
     value: ${{ steps.guix-describe.outputs.channels }}
-jobs:
-  using: composite
+runs:
+  using: 'composite'
   steps:
+    # The default locale on Debian and Ubuntu is "C.UTF-8" which does not exist
+    # in vanilla glibc.  Change to something that works for Guix and Debuntu.
     - run: echo LANG=en_US.utf8 >> $GITHUB_ENV
       shell: bash
       name: Set LANG
-    - run: >
-        wget -nv
-        https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh -O
-        guix-install.sh
-
-        wget -nv https://ci.guix.gnu.org/search/latest/archive?query=spec:tarball+status:success+system:x86_64-linux+guix-binary.tar.xz -O guix-binary-nightly.x86_64-linux.tar.xz
+    - run: |
+        wget -nv https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh -O guix-install.sh
+        wget -nv ${{ inputs.guixBinaryUrl }} -O guix-binary-nightly.x86_64-linux.tar.xz
       shell: bash
       name: Download
-    - run: >
-        wget "https://sv.gnu.org/people/viewgpg.php?user_id=127547" -qO - | sudo
-        gpg --import -
-
+    - run: |
+        wget "https://sv.gnu.org/people/viewgpg.php?user_id=127547" -qO - | sudo gpg --import -
         wget "https://sv.gnu.org/people/viewgpg.php?user_id=15145" -qO - | sudo gpg --import -
       shell: bash
       name: Fetch key
-    - run: >
+    - run: |
         export GUIX_BINARY_FILE_NAME=guix-binary-nightly.x86_64-linux.tar.xz
-
         sudo --preserve-env=GUIX_BINARY_FILE_NAME -- bash -c 'yes | bash guix-install.sh'
       shell: bash
       name: Install Guix
@@ -59,19 +64,23 @@ jobs:
     - run: guix pull --fallback -C ${{ runner.temp }}/channels.scm
       shell: bash
       name: Update Guix
+      if: ${{ inputs.pullAfterInstall == 'true' }}
+    # Use daemon from user, so we don’t have to `guix pull` twice.
     - run: |
         sudo sed -i "s/root/${USER}/" /etc/systemd/system/guix-daemon.service
         sudo systemctl daemon-reload
         sudo systemctl restart guix-daemon
       shell: bash
       name: Restart daemon
+      if: ${{ inputs.pullAfterInstall == 'true' }}
+    # Initially inherit root’s Guix profile, so we can use guix commands without sudo
     - run: |
         echo "$HOME/.config/guix/current/bin" >> $GITHUB_PATH
       shell: bash
       name: Set PATH
-    - run: >
-        echo "::set-output name=channels::$(guix describe -f channels | tr '\n' '
-        ')"
+    # Substitute newlines to work-around GitHubs single-line limitation.
+    - run: |
+        echo "::set-output name=channels::$(guix describe -f channels | tr '\n' ' ')"
       shell: bash
       name: guix describe
       id: guix-describe
